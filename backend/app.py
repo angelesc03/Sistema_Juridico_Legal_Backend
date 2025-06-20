@@ -11,11 +11,12 @@ CORS(app, resources={r"/api/*": {"origins": "https://angelesc03.github.io"}})
 
 # Configuración de MySQL (ajusta estos valores)
 app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.environ.get('MYS_QLUSER')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DATABASE')
-app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
+app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT'))
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['MYSQL_SSL_MODE'] = 'REQUIRED' 
 mysql = MySQL(app)
 
 @app.route('/api/registro', methods=['POST'])
