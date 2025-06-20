@@ -140,9 +140,16 @@ def login():
 
         cur = mysql.connection.cursor()
 
-        # Verificar si el email existe
+        # Verificar si el email existe y obtener datos adicionales
         cur.execute("""
-            SELECT u.id, u.persona_id, u.contrasena_hash, ur.rol_id 
+            SELECT 
+                u.id, 
+                u.persona_id, 
+                u.contrasena_hash, 
+                ur.rol_id,
+                p.nombre,
+                p.apellido_paterno,
+                p.apellido_materno
             FROM usuarios u
             JOIN personas p ON u.persona_id = p.id
             LEFT JOIN usuarios_roles ur ON u.id = ur.usuario_id
@@ -167,12 +174,29 @@ def login():
         if not bcrypt.checkpw(contrasena.encode('utf-8'), usuario['contrasena_hash'].encode('utf-8')):
             return jsonify({'error': 'Credenciales inválidas', 'codigo': 3}), 401
 
+        # Construir nombre completo
+        nombre_completo = f"{usuario['nombre']} {usuario['apellido_paterno']}"
+        if usuario['apellido_materno']:
+            nombre_completo += f" {usuario['apellido_materno']}"
+
+        # Determinar tipo de usuario según el rol
+        tipo_usuario = ""
+        if usuario['rol_id'] == 1:
+            tipo_usuario = "Administrador"
+        elif usuario['rol_id'] == 2:
+            tipo_usuario = "Autoridad"
+        elif usuario['rol_id'] == 3:
+            tipo_usuario = "Usuario"
+
         # Login exitoso
         return jsonify({
             'success': True,
             'message': 'Bienvenido al sistema',
             'persona_id': usuario['persona_id'],
-            'usuario_id': usuario['id']
+            'usuario_id': usuario['id'],
+            'nombre_completo': nombre_completo,
+            'tipo_usuario': tipo_usuario,
+            'rol_id': usuario['rol_id']
         }), 200
 
     except Exception as e:
