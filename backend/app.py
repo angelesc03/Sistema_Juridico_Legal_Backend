@@ -125,3 +125,56 @@ def healthcheck():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
+
+# -----> END POITN PARA EL LOGIN DEL USUARIO ------------
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        contrasena = data.get('contrasena')
+
+        if not email or not contrasena:
+            return jsonify({'error': 'Email y contraseña son requeridos'}), 400
+
+        cur = mysql.connection.cursor()
+
+        # Verificar si el email existe
+        cur.execute("""
+            SELECT u.id, u.persona_id, u.contrasena_hash, ur.rol_id 
+            FROM usuarios u
+            JOIN personas p ON u.persona_id = p.id
+            LEFT JOIN usuarios_roles ur ON u.id = ur.usuario_id
+            WHERE p.email = %s
+        """, (email,))
+        
+        usuario = cur.fetchone()
+        cur.close()
+
+        if not usuario:
+            return jsonify({'error': 'Usuario no encontrado', 'codigo': 1}), 404
+
+        # Verificar si el rol es 4 (no aprobado)
+        if usuario['rol_id'] == 4:
+            return jsonify({
+                'error': 'Usuario en validación',
+                'message': 'Sus credenciales se encuentran en proceso de validación. En poco tiempo podrá acceder al sistema',
+                'codigo': 2
+            }), 403
+
+        # Verificar contraseña
+        if not bcrypt.checkpw(contrasena.encode('utf-8'), usuario['contrasena_hash'].encode('utf-8')):
+            return jsonify({'error': 'Credenciales inválidas', 'codigo': 3}), 401
+
+        # Login exitoso
+        return jsonify({
+            'success': True,
+            'message': 'Bienvenido al sistema',
+            'persona_id': usuario['persona_id'],
+            'usuario_id': usuario['id']
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Error en login: {str(e)}")
+        return jsonify({'error': 'Error en el servidor', 'details': str(e)}), 500

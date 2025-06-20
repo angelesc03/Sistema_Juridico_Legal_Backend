@@ -112,9 +112,18 @@ CREATE TABLE notificaciones (
 
 
 
+-- ****************************** Inserciones de datos para cuando se inicie por primera vez la bse *******************
 
+-- -------------------> Inserción inicial de la tabla de roles 
+INSERT INTO roles (nombre, descripcion) VALUES
+('Administrador', 'Encargado de controlar la gestión de usuarios y asignar permisos en el sistema.'),
+('autoridad_judicial', 'Encargado de atender las demandas y emitir resoluciones.'),
+('demandante/demandado', 'Actor que puede levantar una demanda o responder a una en el sistema.'),
+('Pendiente', 'Usuario pendiente por asignar dentro del sistema');
+
+-- -------------------> 
 -- SELECT * FROM personas;
 -- SELECT * FROM usuarios;
--- SELECT * FROM roles;
+SELECT * FROM roles;
 -- SELECT * FROM usuarios_roles;
 
