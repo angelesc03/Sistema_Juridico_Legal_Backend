@@ -10,7 +10,7 @@ CORS(app, resources={r"/api/*": {"origins": "https://angelesc03.github.io"}})
  
 
 # Configuración de MySQL (ajusta estos valores)
-app.config['MYSQL_HOST'] = os.environ.get('MYSQ_LHOST')
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
 app.config['MYSQL_USER'] = os.environ.get('MYS_QLUSER')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DATABASE')
