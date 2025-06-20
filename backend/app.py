@@ -6,7 +6,8 @@ import json
 import os
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app, resources={r"/api/*": {"origins": "https://angelesc03.github.io"}})
+ 
 
 # Configuración de MySQL (ajusta estos valores)
 app.config['MYSQL_HOST'] = os.environ.get('MYSQLHOST')
