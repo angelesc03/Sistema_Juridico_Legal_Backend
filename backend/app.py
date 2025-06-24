@@ -385,3 +385,47 @@ def crear_demanda():
     except Exception as e:
         mysql.connection.rollback()
         return jsonify({'error': str(e)}), 500
+    
+
+
+    # ------ END POINTS PARA VER EL SEGUIMIENTO DE UNA DEMANDA DESDE EL PERFIL DEL USUARIO -----
+@app.route('/api/demandas/mis-demandas', methods=['GET'])
+def obtener_mis_demandas():
+    try:
+        persona_id = request.args.get('persona_id')
+        if not persona_id:
+            return jsonify({'error': 'ID de persona requerido'}), 400
+
+        cur = mysql.connection.cursor()
+        
+        # Obtener demandas donde el usuario es demandante o demandado
+        cur.execute("""
+            SELECT 
+                d.folio,
+                d.tipo_accion,
+                d.estatus,
+                CONCAT(dp.nombre, ' ', dp.apellido_paterno) as demandante,
+                CONCAT(dd.nombre, ' ', dd.apellido_paterno) as demandado,
+                CONCAT(a.nombre, ' ', a.apellido_paterno) as autoridad
+            FROM demandas d
+            JOIN personas dp ON d.demandante_id = dp.id
+            JOIN personas dd ON d.demandado_id = dd.id
+            LEFT JOIN personas a ON d.autoridad_asignada_id = a.id
+            WHERE d.demandante_id = %s OR d.demandado_id = %s
+            ORDER BY d.fecha_creacion DESC
+        """, (persona_id, persona_id))
+        
+        demandas = cur.fetchall()
+        cur.close()
+        
+        # Si no hay autoridad asignada, mostrar "Por asignar"
+        for demanda in demandas:
+            if not demanda['autoridad']:
+                demanda['autoridad'] = "Por asignar"
+            if not demanda['estatus']:
+                demanda['estatus'] = "Vigente"
+        
+        return jsonify({'success': True, 'demandas': demandas}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
