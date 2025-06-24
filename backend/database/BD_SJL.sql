@@ -122,8 +122,13 @@ INSERT INTO roles (nombre, descripcion) VALUES
 ('Pendiente', 'Usuario pendiente por asignar dentro del sistema');
 
 -- -------------------> 
--- SELECT * FROM personas;
--- SELECT * FROM usuarios;
-SELECT * FROM roles;
--- SELECT * FROM usuarios_roles;
+SELECT * FROM personas;
+ SELECT * FROM usuarios;
+ SELECT * FROM roles;
+SELECT * FROM usuarios_roles;
+
+-- ----------> Generar al primer administrador
+UPDATE usuarios_roles
+SET rol_id = 1
+WHERE usuario_id = 3;
 
