@@ -287,3 +287,101 @@ def desactivar_usuario():
     except Exception as e:
         mysql.connection.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+
+
+# ---------------- END POINTS PARA EL LEVANTAMIENTO DE UNA DEMANDA --------------------------
+@app.route('/api/demandas/generar-folio', methods=['GET'])
+def generar_folio():
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Obtener el último folio
+        cur.execute("SELECT COUNT(*) as total FROM demandas")
+        total = cur.fetchone()['total']
+        nuevo_numero = total + 1
+        folio = f"DEM-{datetime.now().year}-{nuevo_numero:04d}"
+        
+        return jsonify({'success': True, 'folio': folio}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/demandas/buscar-demandado', methods=['POST'])
+def buscar_demandado():
+    try:
+        data = request.get_json()
+        nombre = data.get('nombre')
+        apellido_paterno = data.get('apellido_paterno')
+        apellido_materno = data.get('apellido_materno')
+        
+        if not nombre or not apellido_paterno:
+            return jsonify({'error': 'Nombre y apellido paterno son requeridos'}), 400
+            
+        cur = mysql.connection.cursor()
+        
+        query = """
+            SELECT id FROM personas 
+            WHERE nombre = %s 
+            AND apellido_paterno = %s
+        """
+        params = [nombre, apellido_paterno]
+        
+        if apellido_materno:
+            query += " AND apellido_materno = %s"
+            params.append(apellido_materno)
+        
+        cur.execute(query, params)
+        persona = cur.fetchone()
+        cur.close()
+        
+        if not persona:
+            return jsonify({'error': 'No se encontró al demandado'}), 404
+            
+        return jsonify({'success': True, 'persona_id': persona['id']}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/demandas/crear', methods=['POST'])
+def crear_demanda():
+    try:
+        data = request.get_json()
+        
+        # Validar campos requeridos
+        required_fields = ['folio', 'demandante_id', 'demandado_id', 'pretensiones', 'hechos', 'fundamento_derecho', 'tipo_accion']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Faltan campos obligatorios'}), 400
+            
+        cur = mysql.connection.cursor()
+        
+        # Insertar demanda
+        cur.execute("""
+            INSERT INTO demandas (
+                folio, demandante_id, demandado_id, pretensiones, 
+                hechos, fundamento_derecho, tipo_accion, estatus
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, 'registrada')
+        """, (
+            data['folio'],
+            data['demandante_id'],
+            data['demandado_id'],
+            data['pretensiones'],
+            data['hechos'],
+            data['fundamento_derecho'],
+            data['tipo_accion']
+        ))
+        
+        mysql.connection.commit()
+        demanda_id = cur.lastrowid
+        cur.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Demanda creada exitosamente',
+            'demanda_id': demanda_id
+        }), 201
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        return jsonify({'error': str(e)}), 500
