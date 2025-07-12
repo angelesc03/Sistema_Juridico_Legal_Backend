@@ -6,21 +6,26 @@ import json
 demandas_bp = Blueprint('demandas', __name__)
 
 # ---> Generar un nuevo folio para una demanda 
-@demandas_bp.route('/generar-folio', methods = ['GET'])
+@demandas_bp.route('/generar-folio', methods=['GET'])
 def generar_folio():
     try:
         cur = mysql.connection.cursor()
         
-        # Obtener el último folio
+        # Obtener el total de demandas (maneja caso NULL o 0)
         cur.execute("SELECT COUNT(*) as total FROM demandas")
-        total = cur.fetchone()['total']
-        nuevo_numero = total + 1
+        result = cur.fetchone()
+        total = result['total'] if result and result['total'] is not None else 0
+        
+        # Asegurar que el nuevo número sea 1 si no hay registros
+        nuevo_numero = 1 if total == 0 else total + 1
         folio = f"DEM-{datetime.now().year}-{nuevo_numero:04d}"
         
         return jsonify({'success': True, 'folio': folio}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        cur.close()  
 
 
 
