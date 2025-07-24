@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from app.db import mysql
 import bcrypt
 import json
-import datetime
+from datetime import datetime
 
 demandas_bp = Blueprint('demandas', __name__)
 
